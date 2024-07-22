@@ -24,15 +24,17 @@ class URL:
         statusline = response.readline()
         version, status, explanation = statusline.split(" ", 2)     # expecting HTTP/1.x 200 OK                                             #  
         response_headers = {}
-        while True:
+
+        while True:                             ### check the headers                                                                       #
             line = response.readline()
-            if line == "\r\n": break
+            if line == "\r\n": break            ### the first newline sequence is used to signify the end on the header                     #
             header, value = line.split(":", 1)
             response_headers[header.casefold()] = value.strip()
-        assert "transfer-encoding" not in response_headers
+        assert "transfer-encoding" not in response_headers  # check that the data we’re trying to access isn't being sent in an unusual way #
         assert "content-encoding" not in response_headers
+
         content = response.read()
-        s.close()
+        s.close()                               # closing the socket                                                                        #
         return content
 
 
