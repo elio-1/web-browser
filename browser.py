@@ -4,6 +4,9 @@ import ssl
 user_agents = [
     "WebBrowser/0.01 (Windows NT 10.0; Win64; x64)",
 ]
+saved_socket = {
+
+}
 
 class URL:
     def __init__(self, url) -> None:            ### split the url into a scheme, a host, a port and a path                                  #
@@ -38,6 +41,9 @@ class URL:
             type=socket.SOCK_STREAM,            ### the type of conversation they'll be having                                              #
             proto=socket.IPPROTO_TCP,           ### the protocol they'll be using to establish the connexion                                #
         )
+        if s in saved_socket:
+            return saved_socket[s]
+        
         user_agents_headers = {"User-Agent": user_agents[0]}
         s.connect((self.host, self.port))       ### connect take 1 arg which is a combinaison of the host and the port in this case         #
         
@@ -50,12 +56,13 @@ class URL:
         request_headers += "Connection: close\r\n"      ### indicate that the client is willing to close the connection after sending the request   #
         request_headers += "\r\n"                       ### the end of the message your are sending. otherwise it will wait indefinitly for it      #
         
+
         s.send(request_headers.encode("utf8"))          ### encode convert string to bytes                                                          #
         response = s.makefile("r", encoding="utf8", newline="\r\n") # turn bytes back to str and specify python of the weird http's newline #
         statusline = response.readline()
         version, status, explanation = statusline.split(" ", 2)     # expecting HTTP/1.x 200 OK                                             #  
-       
         response_headers = {}
+       
         while True:                             ### check the headers                                                                       #
             line = response.readline()
             if line == "\r\n": break            ### the first newline sequence is used to signify the end on the header                     #
@@ -64,7 +71,8 @@ class URL:
         assert "transfer-encoding" not in response_headers  # check that the data we’re trying to access isn't being sent in an unusual way #
         assert "content-encoding" not in response_headers
 
-        content = response.read()
+        content = response.read(int(response_headers["content-length"]))
+        saved_socket[s] = content
         s.close()                               # closing the socket                                                                        #
         return content
 
@@ -123,5 +131,10 @@ def load(url):                                  # expect a URL class            
 
 if __name__ == "__main__":
     import sys
-    load(URL(sys.argv[1]))
+    while True:
+        i = input('> url : ')
+        if i == 'quit':
+            break
+        load(URL(i))
+    # load(URL(sys.argv[1]))
     
