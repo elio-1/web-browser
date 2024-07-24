@@ -8,11 +8,16 @@ user_agents = [
 class URL:
     def __init__(self, url) -> None:            ### split the url into a scheme, a host, a port and a path                                  #
         self.scheme, url = url.split(':', 1)  ### https://browser.engineering/http.html becomes ('https', 'browser.engineering/http.html')#
-        assert self.scheme in ["http", "https", "file", "data"]
-        if self.scheme != 'data':
+        assert self.scheme in ["http", "https", "file", "data", "view-source"]
+        if self.scheme not in ["data", "view-source"]:
             url = url.replace('//', '', 1)                                                                  
+        if self.scheme == "view-source":  
+               self.viewsource = self.scheme
+               self.scheme, url = url.split('://', 1)
+        else:
+            self.viewsource = None                  
         if "/" not in url:                      ### ensure that if the url provided doesnt have a '/' that the split still return 2 value   #
-            url = url + "/"                     
+            url = url + "/"
         self.host, url = url.split("/", 1)      ### 'browser.engineering/http.html' becomes ('browser.engineering', 'http.html')            # 
         self.path = "/" + url                   ### 'http.html' becomes '/http.html'                                                        #            
         if self.scheme == 'http':               
@@ -63,12 +68,12 @@ class URL:
         s.close()                               # closing the socket                                                                        #
         return content
 
-    def show_file(self):
-        import os
-        return os.listdir(self.path.split('/',1)[1])
+def show_file(body):
+    import os
+    return os.listdir(body.path.split('/',1)[1])
 
-    def show_data(self):
-        return self.text
+def show_data(body):
+    return body.text
 
 def show(body, endline):                                 # print the content of a page without the html tags                                         #
     entities = {'&lt;':'<','&rt;':'>'}
@@ -95,9 +100,15 @@ def show(body, endline):                                 # print the content of 
         elif not in_tag:
             print(c, end=endline)
 
+def show_html(body):
+    for c in body:
+        print(c, end='')
 
 def load(url):                                  # expect a URL class                                                                        #
-    if url.scheme in ['http', 'https']:
+    if url.viewsource == 'view-source':
+        body = url.request()
+        show_html(body)
+    elif url.scheme in ['http', 'https']:
         body = url.request()
         show(body, "")
     elif url.scheme == 'file':
@@ -105,6 +116,7 @@ def load(url):                                  # expect a URL class            
         show(body, '\n')
     elif url.scheme == 'data':
         show(url.text, '')
+    
 
 
 
