@@ -1,6 +1,9 @@
 import socket
 import ssl
 
+user_agents = [
+    "WebBrowser/0.01 (Windows NT 10.0; Win64; x64)",
+]
 
 class URL:
     def __init__(self, url) -> None:            ### split the url into a scheme, a host, a port and a path                                  #
@@ -30,18 +33,19 @@ class URL:
             type=socket.SOCK_STREAM,            ### the type of conversation they'll be having                                              #
             proto=socket.IPPROTO_TCP,           ### the protocol they'll be using to establish the connexion                                #
         )
-        
+        user_agents_headers = {"User-Agent": user_agents[0]}
         s.connect((self.host, self.port))       ### connect take 1 arg which is a combinaison of the host and the port in this case         #
         
         if self.scheme == 'https':
             ctx = ssl.create_default_context()      ### create a new socket using TLS                                                       # 
             s = ctx.wrap_socket(s, server_hostname=self.host)   # save the socket with the new socket                                       #
         
-        request = f"GET {self.path} HTTP/1.0\r\n"
-        request += f"Host: {self.host}\r\n"     ### the two newline sequence are essential for the other computer to understand that it is  #
-        request += "\r\n"                       ### the end of the message your are sending. otherwise it will wait indefinitly for it      #
+        request_headers = f"GET {self.path} HTTP/1.1\r\n"   
+        request_headers += f"Host: {self.host}\r\n"     ### the two newline sequence are essential for the other computer to understand that it is  #
+        request_headers += "Connection: close\r\n"      ### indicate that the client is willing to close the connection after sending the request   #
+        request_headers += "\r\n"                       ### the end of the message your are sending. otherwise it will wait indefinitly for it      #
         
-        s.send(request.encode("utf8"))          ### encode convert string to bytes                                                          #
+        s.send(request_headers.encode("utf8"))          ### encode convert string to bytes                                                          #
         response = s.makefile("r", encoding="utf8", newline="\r\n") # turn bytes back to str and specify python of the weird http's newline #
         statusline = response.readline()
         version, status, explanation = statusline.split(" ", 2)     # expecting HTTP/1.x 200 OK                                             #  
