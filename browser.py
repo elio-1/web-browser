@@ -1,5 +1,6 @@
 import socket
 import ssl
+import gzip
 
 user_agents = [
     "WebBrowser/0.01 (Windows NT 10.0; Win64; x64)",
@@ -7,6 +8,11 @@ user_agents = [
 saved_url = {
 
 }
+
+### TODO :
+### - Cache recuring images, styles and scripts
+### - Compression support for gzip
+### - ressource negociations
 
 class URL:
     def __init__(self, url) -> None:            ### split the url into a scheme, a host, a port and a path                                  #
@@ -37,8 +43,9 @@ class URL:
             url, self.text = url.split(',', 1)
 
     def request(self):
-        if self.url in saved_url:
-            return saved_url[self.url]
+        # if self.url in saved_url:
+        #     return saved_url[self.url]
+        
         s = socket.socket(                      ### sockets are id that certify a connexion between two computers, allowing them to talk    #
             family=socket.AF_INET,              ### address familly tells where to find the other computer                                  #
             type=socket.SOCK_STREAM,            ### the type of conversation they'll be having                                              #
@@ -54,19 +61,21 @@ class URL:
             ctx = ssl.create_default_context()      ### create a new socket using TLS                                                       # 
             s = ctx.wrap_socket(s, server_hostname=self.host)   # save the socket with the new socket                                       #
         
+        # client header
         request_headers = f"GET {self.path} HTTP/1.1\r\n"   
         request_headers += f"Host: {self.host}\r\n"     ### the two newline sequence are essential for the other computer to understand that it is  #
-        request_headers += "Connection: close\r\n"      ### indicate that the client is willing to close the connection after sending the request   #
+        #request_headers += "Connection: keep-alive\r\n"      ### indicate that the client is willing to close the connection after sending the request   #
+        request_headers += "Connection: close\r\n"
+        #request_headers += "Accept-Encoding: gzip\r\n"
         request_headers += "\r\n"                       ### the end of the message your are sending. otherwise it will wait indefinitly for it      #
         
-
         s.send(request_headers.encode("utf8"))          ### encode convert string to bytes                                                          #
         response = s.makefile("r", encoding="utf8", newline="\r\n") # turn bytes back to str and specify python of the weird http's newline #
         statusline = response.readline()
         version, status, explanation = statusline.split(" ", 2)     # expecting HTTP/1.x 200 OK                                             #  
+        
         response_headers = {}
-       
-        while True:                             ### check the headers                                                                       #
+        while True:                             ### check the response headers                                                                       #
             line = response.readline()
             if line == "\r\n": break            ### the first newline sequence is used to signify the end on the header                     #
             header, value = line.split(":", 1)
@@ -74,11 +83,20 @@ class URL:
         assert "transfer-encoding" not in response_headers  # check that the data we’re trying to access isn't being sent in an unusual way #
         assert "content-encoding" not in response_headers
 
-        if int(status) in [301, 302, 303, 307, 308]:                  ### redirect
+        # if 'gzip' in response_headers["Content-Encoding"]:
+        #     #decompress 
+        #     pass
+
+        # cache_ctrl = response_headers["cache-control"] 
+        # if "no-store" not in cache_ctrl:
+        #     # save stufff in cache
+        #     pass
+        
+        if int(status) in [301, 302, 303, 307, 308]:        ### redirect
             self.url = response_headers["location"]
             print(f"{header} | {status} | {explanation} to {response_headers['location']}") 
             return URL(self.url).request()   
-        
+            
         content = response.read(int(response_headers["content-length"]))
         saved_url[self.url] = content
         #s.close()                               # closing the socket                                                                        #
@@ -95,14 +113,15 @@ def show(body, endline):                                 # print the content of 
     entities = {'&lt;':'<','&rt;':'>'}
     tmp_entity = ''
     in_tag = False
+    content = ""
     for c in body:
         if c == "<":
             in_tag = True
         elif c == ">":
             in_tag = False
         elif tmp_entity in entities:
-            print(entities[tmp_entity], end=endline)
-            print(c, end=endline)
+            content += entities[tmp_entity]
+            content += c
             in_tag = False
             tmp_entity = ''
         elif in_tag == True:
@@ -114,25 +133,29 @@ def show(body, endline):                                 # print the content of 
             in_tag = False
             tmp_entity += c
         elif not in_tag:
-            print(c, end=endline)
+            content += c
+    # print(content)
+    print(type(content))
+    return content
 
 def show_html(body):
     for c in body:
         print(c, end='')
 
-def load(url):                                  # expect a URL class                                                                        #
+def load(url):                                  # expect an URL class                                                                        #
+    content = ''
     if url.viewsource == 'view-source':
         body = url.request()
         show_html(body)
     elif url.scheme in ['http', 'https']:
         body = url.request()
-        show(body, "")
+        content = show(body, "")
     elif url.scheme == 'file':
         body = url.show_file()
         show(body, '\n')
     elif url.scheme == 'data':
         show(url.text, '')
-    
+    return content
 
 
 
