@@ -4,12 +4,13 @@ import ssl
 user_agents = [
     "WebBrowser/0.01 (Windows NT 10.0; Win64; x64)",
 ]
-saved_socket = {
+saved_url = {
 
 }
 
 class URL:
     def __init__(self, url) -> None:            ### split the url into a scheme, a host, a port and a path                                  #
+        self.url = url
         self.scheme, url = url.split(':', 1)  ### https://browser.engineering/http.html becomes ('https', 'browser.engineering/http.html')#
         assert self.scheme in ["http", "https", "file", "data", "view-source"]
         if self.scheme not in ["data", "view-source"]:
@@ -36,14 +37,16 @@ class URL:
             url, self.text = url.split(',', 1)
 
     def request(self):
+        if self.url in saved_url:
+            return saved_url[self.url]
         s = socket.socket(                      ### sockets are id that certify a connexion between two computers, allowing them to talk    #
             family=socket.AF_INET,              ### address familly tells where to find the other computer                                  #
             type=socket.SOCK_STREAM,            ### the type of conversation they'll be having                                              #
             proto=socket.IPPROTO_TCP,           ### the protocol they'll be using to establish the connexion                                #
         )
-        if s in saved_socket:
-            return saved_socket[s]
         
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
+
         user_agents_headers = {"User-Agent": user_agents[0]}
         s.connect((self.host, self.port))       ### connect take 1 arg which is a combinaison of the host and the port in this case         #
         
@@ -71,9 +74,14 @@ class URL:
         assert "transfer-encoding" not in response_headers  # check that the data we’re trying to access isn't being sent in an unusual way #
         assert "content-encoding" not in response_headers
 
+        if int(status) in [301, 302, 303, 307, 308]:                  ### redirect
+            self.url = response_headers["location"]
+            print(f"{header} | {status} | {explanation} to {response_headers['location']}") 
+            return URL(self.url).request()   
+        
         content = response.read(int(response_headers["content-length"]))
-        saved_socket[s] = content
-        s.close()                               # closing the socket                                                                        #
+        saved_url[self.url] = content
+        #s.close()                               # closing the socket                                                                        #
         return content
 
 def show_file(body):
