@@ -46,8 +46,8 @@ class URL:
         # if self.url in saved_url:
         #     return saved_url[self.url]
         
-        s = socket.socket(                      ### sockets are id that certify a connexion between two computers, allowing them to talk    #
-            family=socket.AF_INET,              ### address familly tells where to find the other computer                                  #
+        s = socket.socket(                      ### sockets are an abstract representation of a link between two point in a network         #
+            family=socket.AF_INET,              ### internet socket is for network communication                                            #
             type=socket.SOCK_STREAM,            ### the type of conversation they'll be having                                              #
             proto=socket.IPPROTO_TCP,           ### the protocol they'll be using to establish the connexion                                #
         )
