@@ -19,13 +19,19 @@ class Browser:
         # window size
         self.width = WIDTH
         self.height = HEIGHT
-        self.canvas.pack(fill="both", expand=1)
         self.window.bind("<Configure>", self.resize_window)
+
         # binds
         self.scroll = 0
         self.window.bind("<Down>", self.scrolldown)
         self.window.bind("<Up>", self.scrollup)
-        self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
+        self.window.bind_all("<MouseWheel>", self.on_mousewheel)
+        # grid
+        self.canvas.pack(side="left", fill="both" ,expand=1)
+
+        
+        
+        
 
     def resize_window(self, event):
         self.width = int(event.width)
@@ -50,13 +56,14 @@ class Browser:
         
 
     def draw(self):
-        self.canvas.delete('all')                   ## delete all is used to avoid displaying char on top of another
+        self.canvas.delete('text')                   ## delete all is used to avoid displaying char on top of another
         displayed_list.clear()
         for x, y, c in self.display_list:           ## expect a tuple where x is cursor_x, y is cursor_y and c is a character
             if y > self.scroll + self.height: continue            ## skip the character if its bellow the viewing window for optimization
             if y + VSTEP < self.scroll: continue    ## skip the above. +vstep is for drawing char that are half way
             displayed_list.append((x, y, c))
-            self.canvas.create_text(x, y - self.scroll, text=c) 
+            self.canvas.create_text(x, y - self.scroll, text=c, tags="text") 
+
 
     def load(self, content):
         self.display_list = layout(content, self.width)
@@ -65,6 +72,7 @@ class Browser:
 
 def layout(text, width):
     display_list.clear()
+
     cursor_x, cursor_y = HSTEP, VSTEP                ## represent where the char will be drawn
     for c in text:
         display_list.append((cursor_x, cursor_y, c)) ## append a tuple
