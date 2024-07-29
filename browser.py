@@ -27,18 +27,17 @@ class Browser:
         self.window.bind("<Up>", self.scrollup)
         self.window.bind_all("<MouseWheel>", self.on_mousewheel)
         
-        #text
-        self.text = tkinter.Text(self.window)
-
         # scrollbar
-        self.scrollbar = tkinter.Scrollbar(self.window, command=self.text.yview)
+        self.scrollbar = tkinter.Scrollbar(self.window, command=self.handle_scroll, orient='vertical')
         self.scrollbar.pack( side ="right", fill="y" )
 
-        
-        
-        
-        
 
+        
+    def handle_scroll(self, moveto, pos):
+        if float(pos) > 0.01:
+            self.scroll += SCROLL_STEP
+            self.draw()   
+        
     def resize_window(self, event):
         self.width = int(event.width)
         self.height = int(event.height)  
@@ -70,7 +69,6 @@ class Browser:
             displayed_list.append((x, y, c))
             self.canvas.create_text(x, y - self.scroll, text=c, tags="text")
         self.canvas.pack(side="left", fill="both" ,expand=1)
-
 
 
     def load(self, content):
