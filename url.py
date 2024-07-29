@@ -64,8 +64,8 @@ class URL:
         # client header
         request_headers = f"GET {self.path} HTTP/1.1\r\n"   
         request_headers += f"Host: {self.host}\r\n"     ### the two newline sequence are essential for the other computer to understand that it is  #
-        #request_headers += "Connection: keep-alive\r\n"      ### indicate that the client is willing to close the connection after sending the request   #
-        request_headers += "Connection: close\r\n"
+        #request_headers += "Connection: keep-alive\r\n"      
+        request_headers += "Connection: close\r\n"      ### indicate that the client is willing to close the connection after sending the request   #
         #request_headers += "Accept-Encoding: gzip\r\n"
         request_headers += "\r\n"                       ### the end of the message your are sending. otherwise it will wait indefinitly for it      #
         
