@@ -30,13 +30,18 @@ class Browser:
         # scrollbar
         self.scrollbar = tkinter.Scrollbar(self.window, command=self.handle_scroll, orient='vertical')
         self.scrollbar.pack( side ="right", fill="y" )
+        self.last_scroll_pos = 0
 
 
         
     def handle_scroll(self, moveto, pos):
-        if float(pos) > 0.01:
+        if float(pos) > float(self.last_scroll_pos):
             self.scroll += SCROLL_STEP
             self.draw()   
+            self.last_scroll_pos = pos
+        else:
+            self.scroll -= SCROLL_STEP
+            self.draw()
         
     def resize_window(self, event):
         self.width = int(event.width)
