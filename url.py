@@ -1,6 +1,7 @@
 import socket
 import ssl
 import gzip
+import re
 
 user_agents = [
     "WebBrowser/0.01 (Windows NT 10.0; Win64; x64)",
@@ -55,8 +56,10 @@ class URL:
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) 
 
         user_agents_headers = {"User-Agent": user_agents[0]}
-        s.connect((self.host, self.port))       ### connect take 1 arg which is a combinaison of the host and the port in this case         #
-        
+        try:
+            s.connect((self.host, self.port))       ### connect take 1 arg which is a combinaison of the host and the port in this case         #
+        except socket.gaierror:
+            return ''
         if self.scheme == 'https':
             ctx = ssl.create_default_context()      ### create a new socket using TLS                                                       # 
             s = ctx.wrap_socket(s, server_hostname=self.host)   # save the socket with the new socket                                       #
@@ -96,9 +99,12 @@ class URL:
             self.url = response_headers["location"]
             print(f"{header} | {status} | {explanation} to {response_headers['location']}") 
             return URL(self.url).request()   
-            
+
         content = response.read(int(response_headers["content-length"]))
         saved_url[self.url] = content
+        page_title = re.search('(<title>)(.*)(<\/title>)', response.read())
+        page_title = page_title.group(2)
+        print(page_title)
         #s.close()                               # closing the socket                                                                        #
         return content
 
@@ -135,7 +141,6 @@ def show(body, endline):                                 # print the content of 
         elif not in_tag:
             content += c
     # print(content)
-    print(type(content))
     return content
 
 def show_html(body):

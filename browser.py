@@ -16,13 +16,13 @@ class Browser:
             width=WIDTH,
             height=HEIGHT
         )
+        self.window.title('Awesome Browser')
         # window size
         self.width = WIDTH
         self.height = HEIGHT
         self.window.bind("<Configure>", self.resize_window)
 
         # binds
-        self.scroll = 0
         self.window.bind("<Down>", self.scrolldown)
         self.window.bind("<Up>", self.scrollup)
         self.window.bind_all("<MouseWheel>", self.on_mousewheel)
@@ -30,6 +30,7 @@ class Browser:
         # scrollbar
         self.scrollbar = tkinter.Scrollbar(self.window, command=self.handle_scroll, orient='vertical')
         self.scrollbar.pack( side ="right", fill="y" )
+        self.scroll = 0
         self.last_scroll_pos = 0
 
 
@@ -77,11 +78,11 @@ class Browser:
 
 
     def load(self, content):
-        self.display_list = layout(content, self.width) # [(posx, posy, char), ...]
+        self.display_list = layout(content, self.width) 
         self.draw()
 
 
-def layout(text, width):
+def layout(text, width):                            ## return a list of tuple containing the char and where to draw it[(pos_x, pos_y, char), ...]
     display_list.clear()
 
     cursor_x, cursor_y = HSTEP, VSTEP                ## represent where the char will be drawn
@@ -94,7 +95,7 @@ def layout(text, width):
         if cursor_x >= width - HSTEP:
             cursor_y += VSTEP
             cursor_x = HSTEP
-    return display_list                             ## return a list of tuple containing the char to draw with it's x and x pos
+    return display_list                             
 
 
 if __name__ == "__main__":
