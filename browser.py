@@ -78,7 +78,8 @@ class Browser:
 
 
     def load(self, content):
-        self.display_list = layout(content, self.width) 
+        self.window.title(content['page_title'])
+        self.display_list = layout(content['content'], self.width) 
         self.draw()
 
 
@@ -102,5 +103,6 @@ if __name__ == "__main__":
     import sys
     urlarg = sys.argv[1]
     content = url.load(url.URL(url=urlarg))
+    print(content)
     Browser().load(content)
     tkinter.mainloop()

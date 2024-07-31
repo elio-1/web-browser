@@ -31,6 +31,7 @@ class URL:
             url = url + "/"
         self.host, url = url.split("/", 1)      ### 'browser.engineering/http.html' becomes ('browser.engineering', 'http.html')            # 
         self.path = "/" + url                   ### 'http.html' becomes '/http.html'                                                        #            
+        self.file_path = url
         if self.scheme == 'http':               
             self.port = 80                      
         elif self.scheme == 'https':
@@ -101,19 +102,23 @@ class URL:
             return URL(self.url).request()   
 
         content = response.read(int(response_headers["content-length"]))
-        saved_url[self.url] = content
-        page_title = re.search('(<title>)(.*)(<\/title>)', response.read())
-        page_title = page_title.group(2)
-        print(page_title)
+        # saved_url[self.url] = content
+        
         #s.close()                               # closing the socket                                                                        #
         return content
 
 def show_file(body):
     import os
-    return os.listdir(body.path.split('/',1)[1])
+    files = os.listdir(body)
+    return '\n'.join(files)
 
 def show_data(body):
     return body.text
+
+def get_page_title(html):
+    page_title = re.search('(<title>)(.*)(<\/title>)', html)
+    page_title = page_title.group(2)
+    return page_title
 
 def show(body, endline):                                 # print the content of a page without the html tags                                         #
     entities = {'&lt;':'<','&rt;':'>'}
@@ -140,7 +145,6 @@ def show(body, endline):                                 # print the content of 
             tmp_entity += c
         elif not in_tag:
             content += c
-    # print(content)
     return content
 
 def show_html(body):
@@ -149,18 +153,20 @@ def show_html(body):
 
 def load(url):                                  # expect an URL class                                                                        #
     content = ''
+    page_title = ''
     if url.viewsource == 'view-source':
         body = url.request()
         show_html(body)
     elif url.scheme in ['http', 'https']:
         body = url.request()
+        page_title = get_page_title(body)
         content = show(body, "")
     elif url.scheme == 'file':
-        body = url.show_file()
-        show(body, '\n')
+        content = show_file(url.file_path)
+        page_title = "Index of " + url.url
     elif url.scheme == 'data':
         show(url.text, '')
-    return content
+    return {'page_title':page_title, 'content':content}
 
 
 
