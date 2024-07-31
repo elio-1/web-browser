@@ -148,15 +148,19 @@ def show(body, endline):                                 # print the content of 
     return content
 
 def show_html(body):
+    content = ''
     for c in body:
-        print(c, end='')
+        # print(c, end='')
+        content += c
+    return content
 
 def load(url):                                  # expect an URL class                                                                        #
     content = ''
-    page_title = ''
+    page_title = 'blank'
     if url.viewsource == 'view-source':
         body = url.request()
-        show_html(body)
+        content = show_html(body)
+        page_title = url.url
     elif url.scheme in ['http', 'https']:
         body = url.request()
         page_title = get_page_title(body)
