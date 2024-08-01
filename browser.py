@@ -1,4 +1,5 @@
 import tkinter
+import tkinter.font
 import url
 
 WIDTH, HEIGHT = 800, 600                        ## the size of the browser window
@@ -82,10 +83,24 @@ class Browser:
         self.display_list = layout(content['content'], self.width) 
         self.draw()
 
-
-def layout(text, width):                            ## return a list of tuple containing the char and where to draw it[(pos_x, pos_y, char), ...]
+def layout(text, width):
     display_list.clear()
+    font = tkinter.font.Font()                      ## default font
+    cursor_x, cursor_y = HSTEP, VSTEP                ## represent where the char will be drawn
 
+    for word in text.split():
+        w = font.measure(word)                  ## measure the width of each word
+        if cursor_x + w > width - HSTEP:        ## if the word goes beyond the window frame, go to a new line
+            cursor_y += font.metrics("linespace") * 1.25
+            cursor_x = HSTEP
+        display_list.append((cursor_x, cursor_y, word))
+        cursor_x += w + font.measure(" ")
+
+    return display_list
+
+def layout_char(text, width):                            ## return a list of tuple containing the char and where to draw it[(pos_x, pos_y, char), ...]
+    ### display each characters one by one
+    display_list.clear()
     cursor_x, cursor_y = HSTEP, VSTEP                ## represent where the char will be drawn
     for c in text:
         display_list.append((cursor_x, cursor_y, c)) ## append a tuple
@@ -103,6 +118,5 @@ if __name__ == "__main__":
     import sys
     urlarg = sys.argv[1]
     content = url.load(url.URL(url=urlarg))
-    print(content)
     Browser().load(content)
     tkinter.mainloop()
