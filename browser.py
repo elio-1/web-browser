@@ -91,8 +91,8 @@ def layout(text, width):
     for word in text.split():
         w = font.measure(word)                  ## measure the width of each word
         if cursor_x + w > width - HSTEP:        ## if the word goes beyond the window frame, go to a new line
-            cursor_y += font.metrics("linespace") * 1.25
-            cursor_x = HSTEP
+            cursor_y += font.metrics("linespace") * 1.25 ## newline 
+            cursor_x = HSTEP                                ## reset the cursor to the begining
         display_list.append((cursor_x, cursor_y, word))
         cursor_x += w + font.measure(" ")
 
