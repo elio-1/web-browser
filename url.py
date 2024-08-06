@@ -15,6 +15,16 @@ saved_url = {
 ### - Compression support for gzip
 ### - ressource negociations
 
+class Text:
+    def __init__(self, text):
+        self.text = text
+
+class Tag:
+    def __init__(self, tag):
+        self.tag = tag
+
+        
+
 class URL:
     def __init__(self, url) -> None:            ### split the url into a scheme, a host, a port and a path                                  #
         self.url = url

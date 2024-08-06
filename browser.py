@@ -114,6 +114,8 @@ def layout_char(text, width):                            ## return a list of tup
     return display_list                             
 
 
+
+
 if __name__ == "__main__":
     import sys
     urlarg = sys.argv[1]
